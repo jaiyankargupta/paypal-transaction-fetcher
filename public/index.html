@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Display Transaction IDs</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="card">
+      <form class="form-container">
+        <label for="email">Enter your email:</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          required
+        />
+        <button id="submitBtn">Submit</button>
+        <span id="loading"></span>
+      </div>
+
+      <div id="transactionIds"></div>
+    </div>
+  </body>
+  <script>
+    const submitBtn = document.getElementById('submitBtn');
+    const loadingSpan = document.getElementById('loading');
+    const transactionIdsDiv = document.getElementById('transactionIds');
+
+
+    submitBtn.addEventListener('click', fetchTransactionIds);
+
+    async function fetchTransactionIds() {
+      const email = document.getElementById('email').value;
+
+      // Basic email validation (improve as needed)
+      if (!/^\S+@\S+\.\S+$/.test(email)) {
+        alert('Please enter a valid email address.');
+        return;
+      }
+
+      loadingSpan.textContent = 'Loading...';
+
+      try {
+        const response = await fetch('/api/transactions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch transaction IDs');
+        }
+
+        const data = await response.json();
+
+        transactionIdsDiv.innerHTML = '';
+        if (data.transactionIds.length > 0) {
+          data.transactionIds.forEach(transactionId => {
+            const p = document.createElement('p');
+            p.textContent = `Transaction ID: ${transactionId}`;
+            transactionIdsDiv.appendChild(p);
+          });
+        } else {
+          const p = document.createElement('p');
+          p.textContent = 'No transaction IDs found.';
+          transactionIdsDiv.appendChild(p);
+        }
+      } catch (error) {
+        console.error('Error fetching transaction IDs:', error);
+        transactionIdsDiv.innerHTML = '<p>Error fetching transaction IDs. Please try again later.</p>';
+      } finally {
+        loadingSpan.textContent = '';
+      }
+    }
+  </script>
+</html>
